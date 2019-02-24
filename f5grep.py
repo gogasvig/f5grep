@@ -81,7 +81,7 @@ def cmd_args():
 
     parser.add_argument(
         '-i', '--ignore-case', action='store_true',
-        help='Ignore case distinctions in both the pattern and the input files')
+        help='Ignore case distinctions in both the pattern and input files')
 
     parser.add_argument(
         '-ll', '--loglevel', type=str,
@@ -112,22 +112,6 @@ def get_user_credentials_from_stdin():
     user_password = getpass.getpass('F5 password for {0}? '.format(user))
 
     return user, user_password
-
-
-def set_terminal_type(child):
-    '''Set F5 terminal type.
-
-    If the terminal type is unknown then the terminal defaults to a
-    80x24 dumb terminal.  If the command line gets too long then bash
-    will try to refresh PS1 on the screen.  Now the output has
-    BASH_PROMPT in it so child.expect() will see it before the
-    commands' output.
-
-    Don't bother checking for terminal type and just set it anyway.
-
-    '''
-    child.sendline('export TERM=xterm')
-    child.expect(BASH_PROMPT)
 
 
 def setup_debug_log(args, host):
@@ -226,7 +210,6 @@ def ssh_login(host, fileobj, user, password):
 
         logging.debug("ssh_login::expect: _index=%d", _index)
 
-
         if _index in (0, 1):    # Timeout or EOF.
             logging.error('ERROR! could not login to %s@%s using SSH',
                           user, host)
@@ -283,14 +266,20 @@ def main():
 
     user, password = get_user_credentials_from_stdin()
 
+    # If the terminal type is unknown then the terminal defaults to a
+    # 80x24 dumb terminal.  If the command line gets too long then bash
+    # will try to refresh PS1 on the screen.  Now the output has
+    # BASH_PROMPT in it so child.expect() will see it before the
+    # commands' output.  Force TERM to "xterm" as a work-around.
+
+    os.environ["TERM"] = 'xterm'
+
     for host in BIGIP_HOSTS:
         logging.debug('host: %s', host)
 
         fileobj = setup_debug_log(args, host)
 
         child = ssh_login(host, fileobj, user, password)
-
-        set_terminal_type(child)
 
         ssh_grep(host, child, args)
 
