@@ -59,7 +59,7 @@ import pexpect
 PASSWORD = '(?i)password'
 BASH_PROMPT = r' [#\$] '
 SSH_NEWKEY = '(?i)are you sure you want to continue connecting'
-TMSH_PROMPT = r'\(tmos\)# '
+TMSH_PROMPT = r'# '
 
 USING_TMSH = None
 
@@ -219,7 +219,14 @@ def ssh_login(host, fileobj, user, password):
         elif _index == 2:       # Prompt to accept new ssh key.
             child.sendline('yes')
             continue
-        elif _index == 3:       # TMSH prompt
+        elif _index == 3:       # TMSH prompt.
+
+            # Set cols/rows to unlimited to disable paging and page breaks.
+
+            child.sendline('run /util bash -c "stty cols 0 rows 0"')
+
+            # Switch to bash.
+
             child.sendline('bash')
 
             # Need to save this state because bash will be running
@@ -227,10 +234,10 @@ def ssh_login(host, fileobj, user, password):
 
             USING_TMSH = True
             continue
-        elif _index == 4:       # Password prompt?
+        elif _index == 4:       # Password prompt.
             child.sendline(password)
             continue
-        elif _index == 5:       # Auto login.
+        elif _index == 5:       # Bash prompt.
             pass
 
         break
@@ -266,11 +273,7 @@ def main():
 
     user, password = get_user_credentials_from_stdin()
 
-    # If the terminal type is unknown then the terminal defaults to a
-    # 80x24 dumb terminal.  If the command line gets too long then bash
-    # will try to refresh PS1 on the screen.  Now the output has
-    # BASH_PROMPT in it so child.expect() will see it before the
-    # commands' output.  Force TERM to "xterm" as a work-around.
+    # Force TERM to "xterm" to avoid "unknown term" error.
 
     os.environ["TERM"] = 'xterm'
 
