@@ -279,7 +279,7 @@ def main():
     os.environ["TERM"] = 'xterm'
 
     for host in BIGIP_HOSTS:
-        logging.debug('host: %s', host)
+        logging.info('host: %s', host)
 
         fileobj = setup_debug_log(args, host)
 
