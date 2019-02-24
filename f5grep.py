@@ -221,10 +221,6 @@ def ssh_login(host, fileobj, user, password):
             continue
         elif _index == 3:       # TMSH prompt.
 
-            # Set cols/rows to unlimited to disable paging and page breaks.
-
-            child.sendline('run /util bash -c "stty cols 0 rows 0"')
-
             # Switch to bash.
 
             child.sendline('bash')
@@ -241,6 +237,11 @@ def ssh_login(host, fileobj, user, password):
             pass
 
         break
+
+    # Set cols/rows to unlimited to disable paging and page breaks.
+
+    child.sendline('stty cols 0 rows 0')
+    child.expect(BASH_PROMPT)
 
     return child
 
